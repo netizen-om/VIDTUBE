@@ -134,10 +134,10 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "User not found")
     }
 
-    const isUserValid = await User.isPasswordCorrect(password)
-
+    const isUserValid = await user.isPasswordCorrect(password)
+    
     if (!isUserValid) {
-        throw new ApiError(400, "Invalid User Credentials")
+        throw new ApiError(406, "Invalid User Credentials")
     }
 
     const { refreshToken, accessToken } = await generateAccessAndRefreshToken(user._id)

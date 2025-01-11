@@ -1,6 +1,7 @@
 import express, { Router } from "express"
 import cookieParser from "cookie-parser";
 import cors from "cors"; //it is a middleware
+import tweetRouter from "./routes/tweet.routes.js"
 // import router from "./routes/healthCheck.routes";
 
 const app = express();
@@ -26,6 +27,7 @@ import {errorHandler} from "./middlewares/error.middleware.js"
 //routes
 app.use("/api/v1/healthcheck" , healthCheckRouter)
 app.use("/api/v1/users" , userRouter)
+app.use("/api/v1/tweets" , tweetRouter)
 
 app.use(errorHandler)
 export { app } 
