@@ -7,13 +7,15 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 
 const createTweet = asyncHandler(async (req, res) => {
     const {content} = req.body
-    console.log(content);
-    
-    console.log(req.user._id)
+
     const tweet = await Tweet.create({
         content,
-        owner : req.user._id
+        owner : req.user?._id
     })
+
+    if(!tweet) {
+        throw new ApiError(400, "Tweet not created")
+    }
 
     return res
             .status(201)
