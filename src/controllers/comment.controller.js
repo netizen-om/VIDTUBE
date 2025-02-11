@@ -115,7 +115,7 @@ const addComment = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Video not found")
     }
     
-    const comment = Comment.create({
+    const comment = await Comment.create({
         video : videoId,
         owner : req.user?._id,
         content
@@ -134,10 +134,48 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
+    const { commentId } = req.params
+    const { newContent } = req.body
+
+    if(!newContent){
+        throw new ApiError(401, "content not found")
+    }
+    if(!commentId){
+        throw new ApiError(401, "Comment with provided ID not found")
+    }
+
+    const commentDetails = await Comment.findById(commentId)
+
+    if(!commentDetails){
+        throw new ApiError(401, "Comment not found")
+    }
+
+    commentDetails.content = newContent;
+
+    await commentDetails.save()
+
+    return res 
+            .status(200)
+            .json(new ApiResponce(200, commentDetails, "Comment updated successfully"))
 })
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
+    const { commentId } = req.params
+
+    if(!commentId){
+        throw new ApiError(401, "Comment with provided ID not found")
+    }
+
+    const deletedComment = await Comment.findOneAndDelete({ _id : commentId })
+
+    if (!deletedComment) {
+        throw new ApiError(404, "Comment not found");
+    }
+
+    return res
+            .status(200)
+            .json(new ApiResponce(200, deleteComment, "Comment Deleted successfully"))
 })
 
 export {
