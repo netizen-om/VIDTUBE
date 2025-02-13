@@ -1,4 +1,4 @@
-import mongoose, {isValidObjectId} from "mongoose"
+import mongoose, {Aggregate, isValidObjectId} from "mongoose"
 import {Playlist} from "../models/playlist.models.js"
 import {ApiError} from "../utils/ApiError.js"
 import ApiResponce from "../utils/ApiResponse.js"
@@ -11,30 +11,114 @@ const createPlaylist = asyncHandler(async (req, res) => {
     const { videoId } = req.params
 
     if(!name || !description){
-        throw new ApiError(400, "nam and describtion required")
+        throw new ApiError(400, "name and describtion required")
     }
-
+    
     const createdPlaylist = await Playlist.create({
         name,
         description,
         owner : req.user?._id,
         videos : []
     })
-
+    
     return res 
-            .status(200)
-            .json(new ApiResponce(200, createPlaylist, "playlist created successfull"))
-
+    .status(200)
+    .json(new ApiResponce(200, createPlaylist, "playlist created successfull"))
+    
 })
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
     const {userId} = req.params
-    //TODO: get user playlists
+
+    
+    if (!userId) {
+      throw new ApiError(404, "user Id not found")
+      
+    }
+    if (!isValidObjectId(userId)) {
+        throw new ApiError(404, "User not found")
+    }
+
+    const UserPlaylists = await Playlist.aggregate([
+        {
+          $match: {
+            owner: new mongoose.Types.ObjectId(userId)
+          }
+        },
+        {
+          $lookup: {
+            from: "videos",
+            localField: "videos",
+            foreignField: "_id",
+            as: "videos",
+          }
+        },
+        {
+          $addFields: {
+            TotalVideos: {
+              $size: "$videos"
+            }
+          }
+        },
+        {
+          $addFields: {
+            TotalViews: {
+              $sum : "$videos.views"
+            }
+          }
+        },
+        {
+            $project:{
+                TotalVideos:1,
+                TotalViews:1,
+                name:1,
+                description:1,
+                createdAt:1
+            }
+        }
+        
+      ])
+
+      if(Array.isArray(UserPlaylists) && UserPlaylists.length === 0){
+        return res
+                .status(200)
+                .json(new ApiResponce(
+                    200,
+                    [],
+                    "User has 0 Playlists"
+                ))
+      }
+
+      return res
+      .status(200)
+      .json(new ApiResponse(
+        200,
+        UserPlaylists,
+        "All Playlists fetched successfully"
+      ))
+
+
 })
 
 const getPlaylistById = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     //TODO: get playlist by id
+    if (!playlistId) {
+      throw new ApiError(404, "playlistId not found")
+      
+    }
+    if (!isValidObjectId(playlistId)) {
+      throw new ApiError(404, "playlist not found")
+    }
+    
+    const playlist = await Playlist.findById(playlistId)
+    if (!playlist) {
+      throw new ApiError(404, "Error fetching playlist") 
+    }
+    
+    return res
+            .status(200)
+            .json(new ApiResponce(200, playlist, "Playlist found"))
 })
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
