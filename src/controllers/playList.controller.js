@@ -92,7 +92,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
 
       return res
       .status(200)
-      .json(new ApiResponse(
+      .json(new ApiResponce(
         200,
         UserPlaylists,
         "All Playlists fetched successfully"
