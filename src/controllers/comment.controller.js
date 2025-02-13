@@ -4,7 +4,7 @@ import {ApiError} from "../utils/ApiError.js"
 import ApiResponce from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
-//check onec
+//check once
 const GetAllCommentsOfAVideo = syncHandler(async (req, res) => {
     const { videoId } = req.params
     const { page = 1, limit = 10 } = req.query;
