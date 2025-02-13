@@ -123,12 +123,91 @@ const getPlaylistById = asyncHandler(async (req, res) => {
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
+
+    if (!playlistId) {
+      throw new ApiError(404, "playlistId not found")
+      
+    }
+    if (!isValidObjectId(playlistId)) {
+      throw new ApiError(404, "playlist not found")
+    }
+
+    if (!videoId) {
+      throw new ApiError(404, "videoId not found")
+      
+    }
+    if (!isValidObjectId(videoId)) {
+      throw new ApiError(404, "Video not found")
+    }
+
+    const playlist = await Playlist.findById(playlistId)
+    if (!playlist) {
+      throw new ApiError(404, "Error fetching playlist") 
+    }
+    const videocheck = await Video.findById(videoId)
+
+    if (!videocheck) {
+        throw new ApiError(401, "Video Does not Exist")
+    }
+
+    playlist.videos.push(new mongoose.Types.ObjectId(videoId))
+    const updatedPlaylist = await playlist.save()
+
+    if (!updatedPlaylist) {
+      throw new ApiError(401, "Unable to add video")
+  }
+
+    return res
+        .status(200)
+        .json(new ApiResponce(200, updatePlaylist, "Video added to playlist"))
+
 })
 
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
     // TODO: remove video from playlist
 
+    if (!playlistId) {
+      throw new ApiError(404, "playlistId not found")
+      
+    }
+    if (!isValidObjectId(playlistId)) {
+      throw new ApiError(404, "playlist not found")
+    }
+
+    if (!videoId) {
+      throw new ApiError(404, "videoId not found")
+      
+    }
+    if (!isValidObjectId(videoId)) {
+      throw new ApiError(404, "Video not found")
+    }
+
+    const videocheck = await Video.findById(videoId)
+
+    if (!videocheck) {
+        throw new ApiError(401, "Video Does not Exist")
+    }
+
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(playlistId, 
+      {
+        $pull : {
+          videos : {
+            $in : [videoId]
+          }
+        }
+      },
+      { new : true}
+    )
+
+
+    if (!updatedPlaylist) {
+      throw new ApiError(404, "Error fetching playlist") 
+    }
+    
+    return res
+        .status(200)
+        .json(new ApiResponce(200, updatedPlaylist, "Video deleted from playlist"))
 })
 
 const deletePlaylist = asyncHandler(async (req, res) => {
