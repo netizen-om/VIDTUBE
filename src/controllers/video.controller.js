@@ -171,13 +171,18 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Video ID is not valid Object ID")
     }
     
-    const isVideoPublish = await Video.findById(videoId)
+    const video = await Video.findById(videoId)
     
-    if(!isVideoPublish) {
+    if(!video) {
         throw new ApiError(400, "Video not found")
     }
-    
 
+    video.isPublished = !video.isPublished
+    const togglePublishVideo = await video.save()
+
+    return res
+            .status(200)
+            .json(new ApiResponse(200, togglePublishVideo, "Video publish toggled"))
 })
 
 export {
