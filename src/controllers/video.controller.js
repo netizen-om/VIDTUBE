@@ -121,21 +121,6 @@ const updateVideo = asyncHandler(async (req, res) => {
     if(!uploadedCoverImage) {
         throw new ApiError(400, "Unable to upload cover Image")
     }
-    
-    // const createdVideo = await Video.create({
-    //     videoFile : {
-    //         url : uploadedVideo.url,
-    //         public_id : uploadedVideo.public_id
-    //     },
-    //     thumbnail : {
-    //         url : uploadedCoverImage.url,
-    //         public_id : uploadedCoverImage.public_id
-    //     },
-    //     title,
-    //     description,
-    //     isPublished: true,
-    //     owner: req.user?._id
-    // })
 
     const updatedVideo = await Video.findByIdAndUpdate(videoId,
         {
@@ -158,18 +143,41 @@ const updateVideo = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(new ApiResponse(200, updatedVideo, "Video updated"))
-    
-
-
 })
 
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: delete video
+    if(!isValidObjectId(videoId)){
+        throw new ApiError(400, "Video ID is not valid Object ID")
+    }
+
+    const deletedVideo = await Video.findByIdAndDelete(videoId)
+
+    if(!deletedVideo) {
+        throw new ApiError(400, "unable to delete Video")
+    }
+
+    return res
+            .status(200)
+            .json(new ApiResponse(200, deletedVideo, "Video deleted"))
+
 })
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params
+
+    if(!isValidObjectId(videoId)){
+        throw new ApiError(400, "Video ID is not valid Object ID")
+    }
+    
+    const isVideoPublish = await Video.findById(videoId)
+    
+    if(!isVideoPublish) {
+        throw new ApiError(400, "Video not found")
+    }
+    
+
 })
 
 export {
