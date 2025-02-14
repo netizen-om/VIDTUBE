@@ -17,6 +17,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description} = req.body
     // TODO: get video, upload to cloudinary, create video
 
+    if(!isValidObjectId(videoId)){
+        throw new ApiError(400, "Video ID is not valid Object ID")
+    }
+
     if(!title || !description){
         throw new ApiError(400, "title or description is required")
     }
@@ -96,6 +100,66 @@ const getVideoById = asyncHandler(async (req, res) => {
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: update video details like title, description, thumbnail
+    const { title, description} = req.body
+
+    if(!isValidObjectId(videoId)){
+        throw new ApiError(400, "Video ID is not valid Object ID")
+    }
+
+    if(!title || !description){
+        throw new ApiError(400, "title or description is required")
+    }
+
+    const coverImageLocalPath = req.files?.coverImage[0].path  
+    
+    if(!coverImageLocalPath) {
+        throw new ApiError(400, "coverImage not found")
+    }
+    
+    const uploadedCoverImage = await uploadCloudinary(coverImageLocalPath)
+    
+    if(!uploadedCoverImage) {
+        throw new ApiError(400, "Unable to upload cover Image")
+    }
+    
+    // const createdVideo = await Video.create({
+    //     videoFile : {
+    //         url : uploadedVideo.url,
+    //         public_id : uploadedVideo.public_id
+    //     },
+    //     thumbnail : {
+    //         url : uploadedCoverImage.url,
+    //         public_id : uploadedCoverImage.public_id
+    //     },
+    //     title,
+    //     description,
+    //     isPublished: true,
+    //     owner: req.user?._id
+    // })
+
+    const updatedVideo = await Video.findByIdAndUpdate(videoId,
+        {
+            $set : {
+                title,
+                description,
+                thumbnail : {
+                    url : uploadedCoverImage.url,
+                    public_id : uploadedCoverImage.public_id
+                }
+            }
+        },
+        { new : true }
+    )
+    
+    if(!updatedVideo) {
+        throw new ApiError(400, "Unable to upload Video")
+    }
+    
+    return res
+    .status(200)
+    .json(new ApiResponse(200, updatedVideo, "Video updated"))
+    
+
 
 })
 
