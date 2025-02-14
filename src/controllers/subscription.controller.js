@@ -22,7 +22,8 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     })
     
     if(isSub) {
-        const toggleStatus = await Subscription.findByIdAndDelete(channelId)
+        const toggleStatus = await Subscription.findOneAndDelete({ subscriber: req.user?._id, channel: channelId });
+
         if(!toggleStatus) {
             throw new ApiError(400, "unable to toggle Subscription")
         }
